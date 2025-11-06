@@ -9,41 +9,50 @@
 #A: Get Data and check normality 
 
 #installing packages 
-library(MASS) #for graphing stuff to checking normality 
+library(readxl) #so we can read the excel files 
+library(janitor) #so we can convert to snakecase
 
-#loading the data 
+#Getting data ready 
+d = read_excel("Copy_of_bee_data.xlsx")
+d = clean_names(d) #convert to snake case 
+d$total_distance_m = as.numeric(d$total_distance_m) #convert to numeric
+d = d[,c(8,28)] #pull out the columns we want 
 
-#I am going to bum Nathan's beautiful code htat takes it directly from the EDIS archive, in the meantime I just downloaded it manually 
-ticks = read.csv("tick_rawdata.csv", header = TRUE)
-d <- read.csv("name.csv", header = TRUE, row.names = 1)
-#this says your header is a header for first row and first column is also a header 
-#exploring the data
-sum(ticks$wood.found, na.rm = TRUE)
-sum(ticks$wood.bite, na.rm = TRUE)
-sum(ticks$deer.found, na.rm = TRUE)
-sum(ticks$deer.bite, na.rm = TRUE)
+#C 
+
+#Checking normality 
+hist(d$weight_out_of_nest_g) #beautiful and normal 
+hist(d$total_distance_m, breaks = 100) #revolting! 
+
+y = log(d$total_distance_m + 1) #not great but not as bad 
+hist(y)
+
+d$log_distance = log(d$total_distance_m + 1)
+
+#i think it's actually quadratic 
+
+#here's a model for a quadratic relatoinship
+mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^2), data = d)
+
 
 #Assumption 1 Linearity
 
-#Scatterplot of hours spent and deer bites
-plot(ticks$deer.bite ~ticks$hours) 
-plot(jitter(ticks$deer.bite) ~ticks$hours)
+#Scatterplot of bee weight vs. distance 
+plot(d$log_distance~d$weight_out_of_nest_g)
 
-plot(X,Y,ylim=c(0,100), xlim=c(0,10),cex=1.5,cex.lab=1.25,cex.axis=1.15)
+#B fitting a linear regression 
+reg = lm(d$log_distance~d$weight_out_of_nest_g) #forcing it into linear, log midified 
+#mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^2), data = d) #if we assume quaadratic 
+abline(reg, col = 'red', lwd = 3)
 
-#use function "lm: to plot a line through the data
-reg<-lm(Y~X)
-abline(reg, col="red", lwd=3) 
-
-###CALCULATING A PLOTTING RESIDUALS
-
-predicted<-predict.lm(reg)
-residuals<-Y-predicted
+#C still checking if it's linear  
+predicted = predict.lm(reg) 
+residuals = d$log_distance[1:331] - predicted
 
 ##  plot residuals vs. the predicted values:
 plot(predicted,residuals,cex=2,cex.lab=1.5,cex.axis=1.15, ylab=" Residuals", xlab= "Predicted Y")
 abline(a=0,b=0, col="red", lwd=3,lty="dashed")
-
+#not great 
 
 ###Assumption 2 Homogeneity of Variances
 #We look at the same plot of residuals vs. the predicted values
@@ -54,7 +63,22 @@ stdRes = rstandard(reg)
 
 #QQPLOT
 qqnorm(stdRes,ylab="Standardized Residuals", xlab="Theoretical Quantiles")
-qqline(stdRes, col=2,lwd=2)
+qqline(stdRes, col=2,lwd=2) #not amazing but not terrible 
 
 #historgram of std residuals
 hist(stdRes)
+
+#OK it's actually okay good as a log transform 
+
+#D Making predictions 
+
+#how far does our model think bees of a median weight, and super fat bees at the 95th percentile, will fly? 
+
+median = median(d$weight_out_of_nest_g)
+x_95 = quantile(d$weight_out_of_nest_g, 0.95)
+
+predict(reg) #this predicts for all our our bees
+
+#to predict for just two weights 
+?predict
+predicted_distance = 
