@@ -7,7 +7,7 @@
 ######################################
 
 #A: Get Data and check normality 
-
+#--------------------------------------------------------
 #installing packages 
 library(readxl) #so we can read the excel files 
 library(janitor) #so we can convert to snakecase
@@ -19,6 +19,7 @@ d$total_distance_m = as.numeric(d$total_distance_m) #convert to numeric
 d = d[,c(8,28)] #pull out the columns we want 
 
 #C 
+##--------------------------------------------------------
 
 #Checking normality 
 hist(d$weight_out_of_nest_g) #beautiful and normal 
@@ -41,11 +42,14 @@ mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^
 plot(d$log_distance~d$weight_out_of_nest_g)
 
 #B fitting a linear regression 
+#--------------------------------------------------------------
 reg = lm(d$log_distance~d$weight_out_of_nest_g) #forcing it into linear, log midified 
 #mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^2), data = d) #if we assume quaadratic 
 abline(reg, col = 'red', lwd = 3)
 
+
 #C still checking if it's linear  
+#------------------------------------------------------------
 predicted = predict.lm(reg) 
 residuals = d$log_distance[1:331] - predicted
 
@@ -71,14 +75,28 @@ hist(stdRes)
 #OK it's actually okay good as a log transform 
 
 #D Making predictions 
+#------------------------------------------------------------------------------
 
 #how far does our model think bees of a median weight, and super fat bees at the 95th percentile, will fly? 
 
 median = median(d$weight_out_of_nest_g)
 x_95 = quantile(d$weight_out_of_nest_g, 0.95)
 
-predict(reg) #this predicts for all our our bees
+reg$coefficients
+ # y = mx + b 
+ # distance = 21.033(weight out of nest) + -0.107 
 
-#to predict for just two weights 
-?predict
-predicted_distance = 
+predicted_distance = function(x) {
+  y = 21.033*x - 0.107
+  return(y)
+}
+
+predicted_distance(median)
+predicted_distance(x_95)
+
+#we can't really convert back to meters because we log transformed + 1, but these predictions do look reasonable 
+
+
+
+
+
