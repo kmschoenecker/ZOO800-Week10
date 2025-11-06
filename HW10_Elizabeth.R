@@ -95,6 +95,8 @@ predicted_distance(median)
 predicted_distance(x_95)
 
 #we can't really convert back to meters because we log transformed + 1, but these predictions do look reasonable 
+#The prediction intervals ?? I'm so confused. Fat bees fly longer according to these predictions. 
+
 
 
 
