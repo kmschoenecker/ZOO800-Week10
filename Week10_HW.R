@@ -89,16 +89,20 @@ summary(bee_data$total_distance_m)
 quantile(bee_data$total_distance_m, probs = 0.95, na.rm = TRUE)
 #the 95th quantile is 4080.576, whoa. That is really different from the median
 
+#save these values in a new data frame
+
+newdata <- data.frame(c(101.76, 4080.576))
+
+#use predict()
+
+predict(model_1, newdata)
+
 #use the predict() function to generate predictions
 #I am actually a little confused on how to do this
 #in the examples I was looking at online, it seems like you end up putting the model into the predict
 #function and then the data you have as new_data? 
 #but if we enter the x, y values from the data, how do we get predictions?
 
-#here is how Nathan did the predictions
-
-start_median <- median(bee_data$total_distance_m, na.rm = TRUE)
-start_median
 # Generate prediction using our lm
 predict.lm(model_1, interval="prediction")
 #I am not sure why this prediction interval is not working for me
