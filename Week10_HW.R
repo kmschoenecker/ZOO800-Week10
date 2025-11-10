@@ -91,24 +91,11 @@ quantile(bee_data$total_distance_m, probs = 0.95, na.rm = TRUE)
 
 #save these values in a new data frame
 
-newdata <- data.frame(c(101.76, 4080.576))
+newdata <- data.frame(total_distance_m = c(101.76, 4080.576))
 
 #use predict()
 
-predict(model_1, newdata)
-
-#use the predict() function to generate predictions
-#I am actually a little confused on how to do this
-#in the examples I was looking at online, it seems like you end up putting the model into the predict
-#function and then the data you have as new_data? 
-#but if we enter the x, y values from the data, how do we get predictions?
-
-# Generate prediction using our lm
-predict.lm(model_1, interval="prediction")
-#I am not sure why this prediction interval is not working for me
-#I keep getting the error, 'total_distance_m' not found
-#is this because I do not have it listed in the dataframe?
-#if I just leave model_1, it does not seem to work, well it predicts for every single value
+predict(model_1, newdata, interval = "prediction")
 
 #### Objective 2 ----
 
