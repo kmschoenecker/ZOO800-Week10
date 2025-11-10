@@ -94,6 +94,16 @@ quantile(bee_data$total_distance_m, probs = 0.95, na.rm = TRUE)
 #function and then the data you have as new_data? 
 #but if we enter the x, y values from the data, how do we get predictions?
 
+#here is how Nathan did the predictions
+
+start_median <- median(bee_data$total_distance_m, na.rm = TRUE)
+start_median
+# Generate prediction using our lm
+predict.lm(model_1, interval="prediction")
+#I am not sure why this prediction interval is not working for me
+#I keep getting the error, 'total_distance_m' not found
+#is this because I do not have it listed in the dataframe?
+#if I just leave model_1, it does not seem to work, well it predicts for every single value
 
 #### Objective 2 ----
 
