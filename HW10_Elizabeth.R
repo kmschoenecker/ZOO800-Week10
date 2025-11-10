@@ -39,21 +39,21 @@ mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^
 #Assumption 1 Linearity
 
 #Scatterplot of bee weight vs. distance 
-plot(d$log_distance~d$weight_out_of_nest_g)
+plot(d$weight_out_of_nest_g ~ d$log_distance)
 
 #B fitting a linear regression 
 #--------------------------------------------------------------
-lm_object = lm(d$log_distance~d$weight_out_of_nest_g) #forcing it into linear, log midified 
+lm_object = lm(weight_out_of_nest_g ~ log_distance, data = d) # my model 
 #mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^2), data = d) #if we assume quaadratic 
 #borrowing terminology from Nathan's homework 
 
-abline(reg, col = 'red', lwd = 3)
+abline(lm_object, col = 'red', lwd = 3)
 summary(lm_object)
 
 #C still checking if it's linear  
 #------------------------------------------------------------
-predicted = predict.lm(reg) 
-residuals = d$log_distance[1:331] - predicted
+predicted = predict.lm(lm_object) 
+residuals = d$weight_out_of_nest_g[1:331] - predicted
 
 ##  plot residuals vs. the predicted values:
 plot(predicted,residuals,cex=2,cex.lab=1.5,cex.axis=1.15, ylab=" Residuals", xlab= "Predicted Y")
@@ -65,7 +65,7 @@ abline(a=0,b=0, col="red", lwd=3,lty="dashed")
 
 #Assumption 3 Normality
 #calculate standardized residuals
-stdRes = rstandard(reg)
+stdRes = rstandard(lm_object)
 
 #QQPLOT
 qqnorm(stdRes,ylab="Standardized Residuals", xlab="Theoretical Quantiles")
@@ -77,15 +77,13 @@ hist(stdRes) #OK it's actually okay good as a log transform
 
 autoplot(lm_object) #Wow this doe sit all at once! Thanks Nathan!!! 
 
-
-
 #D Making predictions 
 #------------------------------------------------------------------------------
 
 #how far does our model think bees of a median weight, and super fat bees at the 95th percentile, will fly? 
 
-median = median(d$weight_out_of_nest_g)
-x_95 = quantile(d$weight_out_of_nest_g, 0.95)
+median = median(d$weight_out_of_nest_g); median
+x_95 = quantile(d$weight_out_of_nest_g, 0.95); x_95
 
 ###########################################################################
 #I couldn't figure out the predict function, so I very hackily made my own 
@@ -109,69 +107,123 @@ predicted_distance(x_95)
 #The prediction intervals ?? I'm so confused. Fat bees fly longer according to these predictions. 
 
 #############################################################
-# OK trying to actually use it based off Nathan's stuff 
+# OK trying to actually use it based off Nathan and Kristine's stuff 
 #############################################################
 
-#-----------------Nathan's stuff 
+library(tidyverse)
+library(ggfortify)
 
-# For the median value of X
-# Pull out median value
-start_median <- median(cleaned_bees$weight_start)
-# Generate prediction using our lm
-predict.lm(lm_object, data.frame(weight_start=start_median), interval="prediction")
-# Our fitted value is 0.221, with prediction interval [0.1664, 0.2747]
-
-# For the 95th percentile of X
-# Pull out 95th percentile
-start_95th <- quantile(x=cleaned_bees$weight_start, probs=(0.95))
-# Generate prediction using our lm
-predict.lm(lm_object, data.frame(weight_start=start_95th), interval="prediction")
-# Our fitted value is 0.282, with prediction interval [0.2275, 0.3362]
-
-# ------------ Kristine's stuff 
-
-summary(bee_data$total_distance_m)
-#median distance flown was 101.76 m
-#to get the 95th quantile
-quantile(bee_data$total_distance_m, probs = 0.95, na.rm = TRUE)
-#the 95th quantile is 4080.576, whoa. That is really different from the median
-
-predict.lm(model_1, interval="prediction")
-#I am not sure why this prediction interval is not working for me
-#I keep getting the error, 'total_distance_m' not found
-#is this because I do not have it listed in the dataframe?
-#if I just leave model_1, it does not seem to work, well it predicts for every single value
-
-#Trying to help Kristine 
-
-
-###########################################################################
-#I couldn't figure out the predict function, so I very hackily made my own 
-############################################################################
-
-
+#my stuff (yay works now!) 
+lm_object = lm(weight_out_of_nest_g ~ log_distance, data = d) # my model 
+summary(d$log_distance) #median was 4.632 
+quantile(d$log_distance, probs = 0.95, na.rm = TRUE) #95th percentile was 8.314166 
+new_df = data.frame(log_distance = c(4.632, 8.314166))
+predict(lm_object, new_df, interval = "prediction") # yay now it works 
 
 ######################################
 #    Objective 2
 ######################################
 
+#A: Generate linear regression data where the error in the response variable Y is not quite normally distributed (but still unimodal).  A lognormal or negative binomial distribution should work.  No error in X this time. 100 X, Y pairs should be good.
 #ok, we need a bunch of x y pairs 
+
 
 #from ai, thits generates completely random pairs 
 # Set a seed for reproducibility
 set.seed(456)
 
 # Number of pairs to generate
-n_pairs <- 10
+n_pairs <- 100
 
 # Generate random x-coordinates from a normal distribution (mean=5, sd=2)
-x_coords_norm <- rnorm(n_pairs, mean = 5, sd = 2)
+sim_x_values <- rnorm(n_pairs, mean = 5, sd = 2)
 
-# Generate random y-coordinates from a normal distribution (mean=5, sd=2)
-y_coords_norm <- rnorm(x_coords_norm*2, mean = 5, sd = 2)
+#what do we want our line to be? (pulling from Nathan's code) 
+#y = mx + b 
+#y = 4x + 8  
+
+# Set the slope and intercept
+true_slope <- 4
+true_intercept <- 8
+sim_errors = rlnorm(100, meanlog = 0, sdlog = 1) #generate jitter (random variation to add to the y variable. Oh, these are all positive, we are going to want both positive and negative jitters) 
+
+#Generate y values  
+sim_y_values <- true_intercept + (true_slope * sim_x_values) + sim_errors
+
+# Just visualize, yeah it's linear (stolen from Nathan) 
+ggplot(mapping=aes(x=sim_x_values, y=sim_y_values)) + geom_point()
 
 # Combine into a data frame
-random_pairs_normal <- data.frame(x = x_coords_norm, y = y_coords_norm)
+df <- data.frame(x = sim_x_values, y = sim_y_values)
 
-# Print the resulting pairs
-print(random_pairs_normal)
+#B: Fit a linear regression to the data
+
+
+lm_rlnorm = lm( y ~ x, data = df)
+plot( y ~ x, data = df)
+abline(lm_rlnorm, col = 'red', lwd = 3)
+summary(lm_rlnorm)
+
+#C: Repeat this process and keep track of the true and estimated slope and intercept. 
+# I'm confused, are we comparing to the true slope, the rlnorm slope, or like Nathan said a new rnorm dataset? 
+
+
+
+#Generate perfect y values  
+perfect_y_values <- true_intercept + (true_slope * sim_x_values) 
+names(df)[2] = "y_sim_rlnorm" #rename our simulated column 
+df$y_perfect = perfect_y_values
+
+#fit linear regression to the perfect data 
+lm_perfect = lm(y_perfect ~ x, data = df)
+plot(y_perfect~x, data = df)
+abline(lm_perfect, col = "red", lwd = 2)
+summary(lm_perfect)
+
+#rnorm plot 
+
+sim_errors_norm = rnorm(100) #generate jitter (random variation to add to the y variable, normally distributed) 
+
+#Generate y values  
+sim_y_values_norm <- true_intercept + (true_slope * sim_x_values) + sim_errors_norm
+
+# Just visualize, yeah it's linear (stolen from Nathan) 
+ggplot(mapping=aes(x=sim_x_values, y=sim_y_values_norm)) + geom_point()
+
+#fit linear regression to the perfect data 
+lm_rnorm = lm(sim_y_values_norm ~ x, data = df)
+plot(sim_y_values_norm~x, data = df)
+abline(lm_rnorm, col = "red", lwd = 2)
+summary(lm_rnorm)
+
+# Combine into a data frame
+df$y_sim_rnorm = sim_y_values_norm
+
+
+# D.	How well do the estimated slope and intercept match the true values?
+
+
+#extract coefficients
+lm_rlnorm$coefficients
+lm_perfect$coefficients
+lm_rnorm$coefficients
+
+#The rnorm was closer to the true values than the rlnorm, though both were pretty close 
+#I dunno, Nathan did them, I think we need to do the same thing we did in part 1 but for all the data 
+
+#E. 95th quantiles 
+
+lnorm_sim_pred_intervals = predict.lm()
+#my stuff (yay works now!) 
+lm_object = lm(weight_out_of_nest_g ~ log_distance, data = d) # my model 
+summary(d$log_distance) #median was 4.632 
+quantile(d$log_distance, probs = 0.95, na.rm = TRUE) #95th percentile was 8.314166 
+new_df = data.frame(log_distance = c(4.632, 8.314166))
+predict(lm_object, new_df, interval = "prediction") # yay now it works 
+
+
+# For the lnorm errors simulation:
+lnorm_sim_95_pred_intervals <- predict.lm(sim_lm_object, data.frame(x=sim_x_values), interval="prediction")
+
+# For the norm errors simulation:
+norm_sim_95_pred_intervals <- predict.lm(sim_lm_norm, data.frame(x=sim_x_values), interval="prediction")
