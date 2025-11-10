@@ -108,6 +108,43 @@ predicted_distance(x_95)
 # these predictions do look reasonable 
 #The prediction intervals ?? I'm so confused. Fat bees fly longer according to these predictions. 
 
+#############################################################
+# OK trying to actually use it based off Nathan's stuff 
+#############################################################
+
+#-----------------Nathan's stuff 
+
+# For the median value of X
+# Pull out median value
+start_median <- median(cleaned_bees$weight_start)
+# Generate prediction using our lm
+predict.lm(lm_object, data.frame(weight_start=start_median), interval="prediction")
+# Our fitted value is 0.221, with prediction interval [0.1664, 0.2747]
+
+# For the 95th percentile of X
+# Pull out 95th percentile
+start_95th <- quantile(x=cleaned_bees$weight_start, probs=(0.95))
+# Generate prediction using our lm
+predict.lm(lm_object, data.frame(weight_start=start_95th), interval="prediction")
+# Our fitted value is 0.282, with prediction interval [0.2275, 0.3362]
+
+# ------------ Kristine's stuff 
+
+summary(bee_data$total_distance_m)
+#median distance flown was 101.76 m
+#to get the 95th quantile
+quantile(bee_data$total_distance_m, probs = 0.95, na.rm = TRUE)
+#the 95th quantile is 4080.576, whoa. That is really different from the median
+
+predict.lm(model_1, interval="prediction")
+#I am not sure why this prediction interval is not working for me
+#I keep getting the error, 'total_distance_m' not found
+#is this because I do not have it listed in the dataframe?
+#if I just leave model_1, it does not seem to work, well it predicts for every single value
+
+#Trying to help Kristine 
+
+
 ###########################################################################
 #I couldn't figure out the predict function, so I very hackily made my own 
 ############################################################################
