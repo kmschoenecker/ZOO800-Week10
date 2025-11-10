@@ -82,23 +82,45 @@ hist(stdRes)
 median = median(d$weight_out_of_nest_g)
 x_95 = quantile(d$weight_out_of_nest_g, 0.95)
 
-reg$coefficients
+reg$coefficients #extract our coefficients from our linear model 
  # y = mx + b 
  # distance = 21.033(weight out of nest) + -0.107 
 
-predicted_distance = function(x) {
-  y = 21.033*x - 0.107
-  return(y)
+predicted_distance = function(x) {          #creating a function to see predicted distance given weight
+  y = 21.033*x - 0.107                      #log (distance + 1)
+  y = exp(y)                                #distance in m 
+  return(y)                                 #what to return 
 }
 
+#predicted distance in meters 
 predicted_distance(median)
 predicted_distance(x_95)
 
-#we can't really convert back to meters because we log transformed + 1, but these predictions do look reasonable 
+# these predictions do look reasonable 
 #The prediction intervals ?? I'm so confused. Fat bees fly longer according to these predictions. 
 
 
+######################################
+#    Objective 2
+######################################
 
+#ok, we need a bunch of x y pairs 
 
+#from ai, thits generates completely random pairs 
+# Set a seed for reproducibility
+set.seed(456)
 
+# Number of pairs to generate
+n_pairs <- 10
 
+# Generate random x-coordinates from a normal distribution (mean=5, sd=2)
+x_coords_norm <- rnorm(n_pairs, mean = 5, sd = 2)
+
+# Generate random y-coordinates from a normal distribution (mean=5, sd=2)
+y_coords_norm <- rnorm(x_coords_norm*2, mean = 5, sd = 2)
+
+# Combine into a data frame
+random_pairs_normal <- data.frame(x = x_coords_norm, y = y_coords_norm)
+
+# Print the resulting pairs
+print(random_pairs_normal)
