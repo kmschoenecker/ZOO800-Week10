@@ -97,6 +97,8 @@ newdata <- data.frame(total_distance_m = c(101.76, 4080.576))
 
 predict(model_1, newdata, interval = "prediction")
 
+#the prediction interval for the 95th quantile appears to be larger than at the median
+
 #### Objective 2 ----
 
 #### A: making linear regression data without normally-distributed Y
