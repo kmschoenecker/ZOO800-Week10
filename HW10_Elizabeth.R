@@ -25,7 +25,7 @@ d = d[,c(8,28)] #pull out the columns we want
 hist(d$weight_out_of_nest_g) #beautiful and normal 
 hist(d$total_distance_m, breaks = 100) #revolting! 
 
-y = log(d$total_distance_m + 1) #not great but not as bad 
+y = log(d$total_distance_m + 1) #changing distance to log + 1, not great but not as bad 
 hist(y)
 
 d$log_distance = log(d$total_distance_m + 1)
@@ -43,10 +43,12 @@ plot(d$log_distance~d$weight_out_of_nest_g)
 
 #B fitting a linear regression 
 #--------------------------------------------------------------
-reg = lm(d$log_distance~d$weight_out_of_nest_g) #forcing it into linear, log midified 
+lm_object = lm(d$log_distance~d$weight_out_of_nest_g) #forcing it into linear, log midified 
 #mod <-lm(d$total_distance_m ~ d$weight_out_of_nest_g + I(d$weight_out_of_nest_g^2), data = d) #if we assume quaadratic 
-abline(reg, col = 'red', lwd = 3)
+#borrowing terminology from Nathan's homework 
 
+abline(reg, col = 'red', lwd = 3)
+summary(lm_object)
 
 #C still checking if it's linear  
 #------------------------------------------------------------
@@ -73,6 +75,10 @@ qqline(stdRes, col=2,lwd=2) #not amazing but not terrible
 
 hist(stdRes) #OK it's actually okay good as a log transform 
 
+autoplot(lm_object) #Wow this doe sit all at once! Thanks Nathan!!! 
+
+
+
 #D Making predictions 
 #------------------------------------------------------------------------------
 
@@ -80,6 +86,10 @@ hist(stdRes) #OK it's actually okay good as a log transform
 
 median = median(d$weight_out_of_nest_g)
 x_95 = quantile(d$weight_out_of_nest_g, 0.95)
+
+###########################################################################
+#I couldn't figure out the predict function, so I very hackily made my own 
+############################################################################
 
 reg$coefficients #extract our coefficients from our linear model 
  # y = mx + b 
@@ -97,7 +107,12 @@ predicted_distance(x_95)
 
 # these predictions do look reasonable 
 #The prediction intervals ?? I'm so confused. Fat bees fly longer according to these predictions. 
-?predict.lm
+
+###########################################################################
+#I couldn't figure out the predict function, so I very hackily made my own 
+############################################################################
+
+
 
 ######################################
 #    Objective 2
