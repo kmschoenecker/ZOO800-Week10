@@ -70,9 +70,8 @@ qqnorm(stdRes,ylab="Standardized Residuals", xlab="Theoretical Quantiles")
 qqline(stdRes, col=2,lwd=2) #not amazing but not terrible 
 
 #historgram of std residuals
-hist(stdRes)
 
-#OK it's actually okay good as a log transform 
+hist(stdRes) #OK it's actually okay good as a log transform 
 
 #D Making predictions 
 #------------------------------------------------------------------------------
@@ -98,7 +97,7 @@ predicted_distance(x_95)
 
 # these predictions do look reasonable 
 #The prediction intervals ?? I'm so confused. Fat bees fly longer according to these predictions. 
-
+?predict.lm
 
 ######################################
 #    Objective 2
