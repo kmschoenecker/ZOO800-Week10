@@ -5,6 +5,7 @@
 library(readxl)
 library(janitor)
 library(tidyverse)
+library(ggfortify)
 
 #### Objective 1 ----
 
@@ -107,31 +108,66 @@ predict.lm(model_1, interval="prediction")
 
 #### Objective 2 ----
 
-#### Part A Generate linear regression data where the error in the response variable Y is not quite normally
-#distributed (but still unimodal). A lognormal or negative binomial distribution should work. No
-#error in X this time. 100 X, Y pairs should be good.
+#### A: making linear regression data without normally-distributed Y
 
-#by no error in X, does that mean generate from a normal distribution?
+# I'll use negative binomial, we make 100 xy pairs with error
+# For x values I'll do a standard normal
+sim_x_values <- rnorm(100)
+# Set the slope and intercept
+true_slope <- 4
+true_intercept <- 8
+# For error values I'll do a standard lognormal
+sim_error_values_lnorm <- rlnorm(100)
+# See what the y values look like, yeah it's very much not normal
+hist(sim_error_values_lnorm)
 
-X <- rnorm(100)
-Y <- rlnorm(100) #to generate log normal values
+# Calculate the y values from everything
+sim_y_values <- true_intercept + (true_slope * sim_x_values) + sim_error_values_lnorm
 
-#### Part B Fit a linear regression to this data
+# Just visualize, yeah it's linear
+ggplot(mapping=aes(x=sim_x_values, y=sim_y_values)) + geom_point()
 
-model_2 <- lm(Y ~ X)
-summary(model_2)
+#### B: fit a linear model
+sim_lm_object <- lm(sim_y_values ~ sim_x_values)
+sim_lm_object
 
-plot(model_2)
+#### C: unsure what to be repeating but i'll pull out slope and intercept
+lm_slope <- sim_lm_object$coefficients["sim_x_values"] 
+lm_intercept <- sim_lm_object$coefficients["(Intercept)"]
 
-#### Part C
+# In case this is asking to repeat but with normally-distributed errors I'll do that
+sim_error_values_norm <- rnorm(100)
+sim_y_values_norm <- true_intercept + (true_slope * sim_x_values) + sim_error_values_norm
+sim_lm_norm <- lm(sim_y_values_norm ~ sim_x_values)
+sim_lm_norm
 
-intercept <- coef(model_2)[1]
-slope <- coef(model_2)[2] #pulls out and saves the slope from our model
+lm_slope_norm <- sim_lm_norm$coefficients["sim_x_values"]
+lm_intercept_norm <- sim_lm_norm$coefficients["(Intercept)"]
 
-#what do you mean, true value for the slope and intercept?
-#like, just if we had plotted them as a scatterplot the slope and intercept?
+#### D: how do the true and estimated slopes and intercepts compare?
+# For the lnorm errors:
+# The true slope is 4, while the calculated slope was 3.672. Not perfect but not bad!
+# The true intercept is 8, while the calculated intercept was 9.512. It's close!
 
-#### Part D
-#### Part E
-#### Part F
-#### Part G
+# For the norm errors:
+# The calculated slope and intercept were 3.916 and 7.919. Much better here!
+
+#### E: 95% prediction intervals for each x value
+# For the lnorm errors simulation:
+lnorm_sim_95_pred_intervals <- predict.lm(sim_lm_object, data.frame(x=sim_x_values), interval="prediction")
+
+# For the norm errors simulation:
+norm_sim_95_pred_intervals <- predict.lm(sim_lm_norm, data.frame(x=sim_x_values), interval="prediction")
+
+#### F: what fraction falls in there?
+# For lnorm errors simulation: 95 out of 100 y values fell in the prediction interval
+sum((sim_y_values <= lnorm_sim_95_pred_intervals[, 3] & sim_y_values >= lnorm_sim_95_pred_intervals[, 2]))
+
+# For norm errors simulation: 96 out of 100 y values fell in the prediction interval
+sum((sim_y_values_norm <= norm_sim_95_pred_intervals[, 3] & sim_y_values_norm >= norm_sim_95_pred_intervals[, 2]))
+
+#### G implications in estimated uncertainty vs true uncertainty
+# Perhaps estimates of uncertainty are a little worse for log normal than normal,
+# but I can't say by how much. It actually seemed like the parameter estimation was
+# worse than the prediction interval performance here, but I'm not sure how much this
+# depends on the given slope and intercept and error and x distributions.
